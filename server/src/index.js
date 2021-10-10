@@ -95,7 +95,7 @@ function authMiddleware(request, response, next) {
     const token = authorization.split(" ")[1]; // ["Bearer" , 'token']
     jwt.verify(token, jwtSecret);
   } catch (error) {
-    return response.status(400).json({ error: "Unauthorized Access" });
+    return response.status(403).json({ error: "Unauthorized Access" });
   }
 
   next();

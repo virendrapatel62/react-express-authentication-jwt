@@ -1,12 +1,30 @@
 import { useEffect, useState } from "react";
-import { getAllUsers } from "../services/user.service";
+import { useHistory, useLocation, useParams } from "react-router-dom";
+import { getAllOrders, getAllUsers } from "../services/user.service";
 
 function UserList(props) {
   const [users, setUsers] = useState([]);
+  const history = useHistory();
+  const location = useLocation();
+  console.log("PATH NAME ", history.location.pathname);
 
   useEffect(() => {
+    console.log("READING TOKEN......");
+    const tokenString = localStorage.getItem("token");
+    if (!tokenString) {
+      console.log(" TOKEN NOT FOUND......");
+      history.push("/login?returnUrl=" + location.pathname);
+      return;
+    }
+
+    console.log(" TOKEN  FOUND......");
+    console.log("Getting All USERs.....");
     getAllUsers().then((users) => {
       setUsers(users);
+    });
+
+    getAllOrders().then((data) => {
+      console.log(data);
     });
   }, []);
 
