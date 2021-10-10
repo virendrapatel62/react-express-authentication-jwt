@@ -17,6 +17,7 @@
   "author": "virendra patel",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "password-hash": "^1.2.2",

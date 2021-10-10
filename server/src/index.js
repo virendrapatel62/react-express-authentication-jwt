@@ -1,11 +1,13 @@
 const { json } = require("body-parser");
 const express = require("express");
 const { v4: uuid } = require("uuid");
+const cors = require("cors");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const passwordHash = require("password-hash");
 let users = [];
+const jwtSecret = "secret@!@#";
 
 function saveUserToFile(user) {
   users.push(user);
@@ -27,10 +29,17 @@ readUsersFromFile();
 
 const app = express();
 
-app.use(express.json());
+app.use((request, response, next) => {
+  console.log(`method: ${request.method} url: ${request.url}`);
+  next();
+});
 
-app.listen(3002, () => {
-  console.log("Listening on PORT 3001");
+app.use(cors());
+
+app.use(express.json());
+const PORT = 3002;
+app.listen(PORT, () => {
+  console.log(`Listening on PORT ${PORT}`);
 });
 
 app.get("/", (request, response) => {
@@ -40,6 +49,7 @@ app.get("/", (request, response) => {
 });
 
 app.get("/api/users", (request, response) => {
+  console.log("/api/users");
   response.json({ users });
 });
 
@@ -67,11 +77,34 @@ app.post("/api/users/login", (request, response) => {
   });
 
   if (user && passwordHash.verify(password, user.password)) {
-    // const token = jwt.sign()
-    return response.json({ message: "Login Success" });
+    const payload = { id: user.id, email: user.email };
+    const token = jwt.sign(payload, jwtSecret);
+
+    return response.json({ message: "login success", token, type: "Bearer" });
   }
 
   return response.status(400).json({
     message: "Invalid Email or Password",
   });
+});
+
+function authMiddleware(request, response, next) {
+  const { authorization } = request.headers;
+
+  try {
+    const token = authorization.split(" ")[1]; // ["Bearer" , 'token']
+    jwt.verify(token, jwtSecret);
+  } catch (error) {
+    return response.status(400).json({ error: "Unauthorized Access" });
+  }
+
+  next();
+}
+
+app.get("/api/orders", authMiddleware, (req, res) => {
+  res.json({ orders: ["order1", "order2", "order3"] });
+});
+
+app.get("/api/profile", authMiddleware, (request, response) => {
+  response.json({ profile: { name: "virendra" } });
 });
